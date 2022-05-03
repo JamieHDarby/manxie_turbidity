@@ -32,7 +32,7 @@
   if(!require(mapdata)) install.packages("mapdata")
   if(!require(maps)) install.packages("maps")
   if(!require(ggmap)) install.packages("ggmap")
-  if(!require(moveHMM)) install.packages("moveHMM")
+  if(!require(momentuHMM)) install.packages("momentuHMM")
   if(!require(tidyverse)) install.packages("tidyverse")
   if(!require(EMbC)) install.packages("EMbC")
   if(!require(ggpubr)) install.packages("ggpubr")
@@ -45,7 +45,6 @@
   if(!require(ResourceSelection)) install.packages("ResourceSelection")
   if(!require(suncalc)) install.packages("suncalc")
   if(!require(marmap)) install.packages("marmap")
-  if(!require(lattice)) install.packages("lattice")
   if(!require(PresenceAbsence)) install.packages("PresenceAbsence")
   if(!require(ROCR)) install.packages("ROCR")
   if(!require(PathInterpolatR)) install.packages("PathInterpolatR")
@@ -53,6 +52,7 @@
   if(!require(mgcViz)) install.packages("mgcViz")
   if(!require(birk)) install.packages("birk")
   if(!require(diveMove)) install.packages("diveMove")
+  if(!require(DHARMa)) install.packages("DHARMa")
 }
 
 # UTM302WGS ---------------------------------------------------------------
@@ -100,49 +100,6 @@ WGS2UTM30 <- function(dataframe)
   return(dataframe)
 }
 
-# listltrajfunc -----------------------------------------------------------
-
-listltrajfunc <- function(x){ 
-  
-  data.xy <- x[c("Longitude","Latitude")]
-  
-  xysp <- SpatialPoints(data.xy)
-  
-  proj4string(xysp) <- CRS("+init=epsg:4326")
-  
-  xysp <- spTransform(
-    xysp,
-    CRS("+proj=utm +zone=29 ellps=WGS84"))
-  
-  as.ltraj(xy = data.frame(xysp),
-           date = x$date_time,
-           id = as.character(x$ID),
-           typeII = T)
-  
-}
-
-ltraj2normdf <- function(x, y)
-{
-  require(adehabitatLT)
-  
-  redisfunc <- function(x)
-  { 
-    redisltraj(na.omit(x), y, type = "time")
-  }
-  
-  tempdf1 <- lapply(x,redisfunc)
-  
-  if(!is.regular(tempdf1[[1]]))
-    
-    stop("Data not normalised")
-  
-  else(
-    
-    tempdf2 <- lapply(tempdf1, ld))
-  
-  output <- Reduce(rbind, tempdf2)
-}
-
 # PointDist ---------------------------------------------------------------
 
 PointDist<-function(dataframe, x, y)
@@ -160,32 +117,6 @@ PointDist<-function(dataframe, x, y)
   PointDist[1:nrow(dataframe)] = pointDistance(
     matrix(c(dataframe$Longitude,
              dataframe$Latitude),
-           ncol = 2),
-    matrix(c(longrep,
-             latrep),
-           ncol = 2),
-    longlat=TRUE,
-    allpairs=FALSE)
-  PointDist
-}
-
-# PointDistAlt ------------------------------------------------------------
-
-PointDistAlt<-function(dataframe, x, y)
-{
-  PointDist<-rep(NA,nrow(dataframe))
-  
-  long<- x
-  
-  lat<- y
-  
-  longrep<-rep(long,nrow(dataframe))
-  
-  latrep<-rep(lat,nrow(dataframe))
-  
-  PointDist[1:nrow(dataframe)] = pointDistance(
-    matrix(c(dataframe$lon,
-             dataframe$lat),
            ncol = 2),
     matrix(c(longrep,
              latrep),
@@ -480,62 +411,6 @@ TripFunc <- function(x)
   avg_trip<-split(trip_travel,trip_travel$id)
 }
 
-# timecombo ---------------------------------------------------------------
-
-timecombo<-function(x)
-{ 
-  dt <- as.POSIXct(strptime
-                   (paste
-                     (as.character
-                       (x$Date),
-                       as.character(x$Time)),
-                     format = "%Y/%m/%d  %H:%M:%S",
-                     tz = "UTC"))
-  
-  dt2 <- as.POSIXct(strptime
-                    (paste
-                      (as.character
-                        (x$Date),
-                        as.character(x$Time)),
-                      format = "%d/%m/%Y  %H:%M:%S",
-                      tz = "UTC"))
-  for(i in 1:nrow(x))
-  {
-    if(is.na(dt[i]) == T)
-    {dt[i] <- dt2[i]}
-  }
-  if(anyNA(dt) == T)
-    stop("time or date format not recognised")
-  x$date_time <- dt
-  return(x)	
-}     
-
-# awktimecombo ------------------------------------------------------------
-
-awktimecombo <- function(x)
-{ 
-  dt <- as.POSIXct(strptime
-                   (paste
-                     (as.character(x$Year),
-                       "/",
-                       as.character(x$Month),
-                       "/",
-                       as.character(x$Day),
-                       " ",
-                       as.character(x$Hour),
-                       ":",
-                       as.character(x$Minute),
-                       ":",
-                       as.character(x$Second),
-                       sep = ""),
-                     format = "%Y/%m/%d  %H:%M:%S",
-                     tz = "UTC"))
-  
-  x$date_time <- dt
-  
-  return(x)	
-}
-
 # tracksplit --------------------------------------------------------------
 
 tracksplit <- function(
@@ -582,108 +457,6 @@ tracksplit <- function(
     split[i + 1] <- paste(x$ID[i + 1], k, sep = '_')
   }
   split
-}
-
-# tripdistsplit -----------------------------------------------------------
-
-tripdistsplit <- function(x,
-                          dist = 50,
-                          longer = T)
-{
-  list <-
-    split(x,
-          x$trip_id)
-  
-  for(i in 1:length(list))
-  {
-    if(longer == F)
-    {
-      if(max(list[[i]]$PointDist) < (dist * 1000))
-      {
-        list[[i]]$keep <-
-          rep(1, nrow(list[[i]]))
-      }
-      else{
-        list[[i]]$keep <-
-          rep(0, nrow(list[[i]]))
-      }
-    }
-    else
-    {
-      if(max(list[[i]]$PointDist) > (dist * 1000))
-      {
-        list[[i]]$keep <-
-          rep(1, nrow(list[[i]]))
-      }
-      else{
-        list[[i]]$keep <-
-          rep(0, nrow(list[[i]]))
-      }
-    }
-  }
-  
-  x <-
-    subset.data.frame(
-      do.call(
-        rbind,
-        list),
-      keep == 1)
-  
-  x <- x[, !(names(x) %in% "keep")]
-}
-
-# patchdistsplit ----------------------------------------------------------
-
-patchdistsplit <- function(x,
-                           dist = 50,
-                           longer = T)
-{
-  list <-
-    split(x,
-          x$PatchID)
-  
-  for(i in 1:length(list))
-  {
-    if(longer == F)
-    {
-      if(max(list[[i]]$b_dist) < (dist * 1000))
-      {
-        list[[i]]$keep <-
-          rep(1, nrow(list[[i]]))
-      }
-      else{
-        list[[i]]$keep <-
-          rep(0, nrow(list[[i]]))
-      }
-    }
-    else
-    {
-      if(max(list[[i]]$b_dist) > (dist * 1000))
-      {
-        list[[i]]$keep <-
-          rep(1, nrow(list[[i]]))
-      }
-      else{
-        list[[i]]$keep <-
-          rep(0, nrow(list[[i]]))
-      }
-    }
-  }
-  
-  x <-
-    subset.data.frame(
-      do.call(
-        rbind,
-        list),
-      keep == 1)
-  
-  x <- x[, !(names(x) %in% "keep")]
-}
-
-# rad2deg -----------------------------------------------------------------
-
-rad2deg = function(rad) {
-  return((180 * rad) / pi)
 }
 
 # EnvAppend ---------------------------------------------------------------
@@ -749,45 +522,6 @@ EnvAppend <- function(x)
   x
 }
 
-# StateClustR -------------------------------------------------------------
-
-StateClustR <- function(x)
-{
-  Clust <- rep(1, nrow(x))
-  
-  for(i in 2:nrow(x))
-  {
-    if(x$HMMState[i] == x$HMMState[i - 1])
-    {Clust[i] <- Clust[i - 1] + 1}
-    else{Clust[i] <- Clust[i - 1]}
-  }
-  
-  x$ClustR <- Clust
-  
-  x
-}
-
-# trip_cleaner ------------------------------------------------------------
-
-trip_cleaner <- function(x, t = 60)
-{
-  ind <- 1
-  
-  x$section <- paste(x$trip_id, ind, sep = "_")
-  
-  for(i in 2:(nrow(x)))
-  {
-    diff <- abs(as.numeric(difftime(time1 = x$date_time[i],
-                                    time2 = x$date_time[i - 1],
-                                    units = "mins")))
-    
-    if(diff > t){ind <- ind + 1}
-    
-    x$section[i] <- paste(x$trip_id[i], ind, sep = "_")
-  }
-  x
-}
-
 # LinStepR ----------------------------------------------------------------
 
 LinStepR <- function(df, t = 60, extras = NULL)
@@ -829,36 +563,6 @@ LinStepR <- function(df, t = 60, extras = NULL)
     }
   }
   out
-}
-
-# PointWeight -------------------------------------------------------------
-
-PointWeight <- function(x)
-{
-  weight <- rep(0, nrow(x))
-  
-  diff <- rep(1, nrow(x))
-  
-  for(i in 1:(nrow(x) - 1))
-  {
-    diff[i] <- as.numeric(
-      abs(
-        difftime(x$date_time[i],
-                 x$date_time[i + 1],
-                 unit = "sec")))
-  }
-  
-  for(i in 1:(nrow(x) - 1))
-  {
-    if(x$trip_id[i] != x$trip_id[i + 1]){
-      weight[i] <- 0}
-    else{
-      weight[i] <- (median(diff))/diff[i]
-    }
-  }
-  x$point_weight <- weight
-  
-  x
 }
 
 # cefas_tdr ---------------------------------------------------------------

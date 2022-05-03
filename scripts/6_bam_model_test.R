@@ -76,10 +76,7 @@ print(paste("auc: ", auc@y.values))
 # blows away mess of associated objects
 rm(pr, pred, perf, y, x, fi, L, d, ddf, ind, alpha, threshold, DATA, pre, auc)
 
-# install.packages("DHARMa")
-
-require(DHARMa)
-
+# Test model residuals
 sim.output <- simulateResiduals(mod, n = 200)
 plot(sim.output)
 testDispersion(sim.output)
