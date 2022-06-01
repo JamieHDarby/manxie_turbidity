@@ -83,7 +83,7 @@ state_probs <- ggplot() +
               aes(x = cov, ymin = lci, ymax = uci, fill = "Rest"), alpha = 0.3) +
   geom_line(data = hmm_plot_df$Rest,
             aes(x = cov, y = est, colour = "Rest"), size = 1.2) +
-  labs(x = "Secchi disk depth (m)",
+  labs(x = "Secchi disk depth (Zsd, m)",
        y = "Stationary state probabilities",
        fill = "State") +
   theme_minimal() +

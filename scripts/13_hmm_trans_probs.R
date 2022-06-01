@@ -11,7 +11,7 @@ head(cov.df)
 ci.list <- lapply(1:nrow(cov.df), function(x) {
   print(x)
   cov.sub.df <- cov.df[x,]
-  return(CIreal(StateModel_zsd,covs=cov.sub.df)$gamma)
+  return(CIreal(StateModel_zsd, covs = cov.sub.df)$gamma)
 })
 
 cov.means <- lapply(ci.list, '[[', 1) 
@@ -129,7 +129,7 @@ pal = wes_palette(name = "GrandBudapest1")
 state_trans_plot <- ggplot(mod.trans.df, aes(x = zsd, fill = state_1, y = mean)) +
   #ylim(0.5, 1)+ # can adjust depending on range of values
   theme_minimal() + ylab("Transition probability") +
-  xlab("Secchi disk depth (m)") +
+  xlab("Secchi disk depth (Zsd, m)") +
   scale_x_continuous(limits=c(0, 17)) + #xlab("Wind speed (ms-1)")+
   theme(legend.position = "none",
         axis.line = element_line(),
@@ -155,7 +155,7 @@ mod.trans.df <- rbind(mod.2_2_df, mod.3_2_df, mod.3_3_df)
 state_trans_plot_res <- ggplot(mod.trans.df, aes(x = zsd, fill = trans, y = mean)) +
   #ylim(0.5, 1)+ # can adjust depending on range of values
   theme_minimal() + ylab("Transition probability") +
-  xlab("Secchi disk depth (m)") +
+  xlab("Secchi disk depth (Zsd, m)") +
   scale_x_continuous(limits=c(0, 17)) + #xlab("Wind speed (ms-1)")+
   theme(legend.position = "none",
         axis.line = element_line(),

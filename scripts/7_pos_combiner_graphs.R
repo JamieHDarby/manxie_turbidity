@@ -41,10 +41,13 @@ dive_timing_plot <-
   geom_histogram(aes(x = MOD, weight = dives),
                  fill = "#007371",
                  alpha = 0.5, binwidth = 0.5) +
-  geom_smooth(aes(x = MOD, y = sunangle), colour = "black") +
-  labs(x = "Hour", y = "Dives") +
+  geom_smooth(aes(x = MOD, y = (sunangle*3.5)), colour = "black") +
+  labs(x = "Hour", y = "Dives") + 
+  scale_y_continuous(
+    sec.axis = sec_axis(trans =~./3.5, name="Solar angle (degrees)")) +
   scale_x_continuous(limits = c(0, 24),
-                     breaks = c(0, 6, 12, 18, 24))
+                     breaks = c(0, 6, 12, 18, 24)) +
+  geom_hline(aes(yintercept = 0))
 
 ggsave(dive_timing_plot, filename = "plots/dive_time_plot.png",
        width = 5, height = 3, dpi = 500)

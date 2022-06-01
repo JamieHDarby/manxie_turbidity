@@ -19,7 +19,6 @@ p2 <- plot(sm(viz_ob, select = 2)) +
   labs(x = "Cloud cover (%)",
        y = "Dive depth (m)",
        title = "b)")
-  
 
 p3 <- plot(sm(viz_ob, select = 3)) + 
   l_fitLine(linetype = 1)  +
@@ -31,16 +30,16 @@ p3 <- plot(sm(viz_ob, select = 3)) +
   scale_x_continuous(limits = c(0, 24),
                      breaks = c(0, 6, 12, 18, 24))
 
-p4 <- plot(sm(viz_ob, select = 4)) +
+p4 <- plot(sm(viz_ob, select = 5)) +
   l_fitLine(linetype = 1)  +
   l_points() +
   l_ciLine(linetype = 3) +
-  labs(y = "Effect of individual on dive depth (m)", title = "d)")
+  labs(y = "Effect of individual on dive depth (m)", title = "c)")
 
-mod_effects <- gridPrint(p1, p2, p3, p4, nrow = 2)
+mod_effects <- gridPrint(p1, gridPrint(p2, p4, nrow = 1), nrow = 2, heights = c(1.2, 1))
 
 ggsave(mod_effects, filename = "plots/effects_plot_depth.png",
-       dpi = 500, width = 8, height = 6)
+       dpi = 500, width = 6, height = 6)
 
 ggplot(dive_pos_meta) + geom_density(aes(x = zsd))
 

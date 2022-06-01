@@ -142,3 +142,14 @@ manxie_ls$MOD <-
 
 # Save it off to be loaded next time without running all of the above
 save(manxie_ls, file = "data/cleaned/manxie_ls_int_env2.RData")
+
+split(manxie_ls, manxie_ls$trip_id) %>%
+  lapply(., function(x){mean(x$zsd, na.rm = T)}) %>%
+  unlist(.) %>%
+  mean(., na.rm = T)
+
+split(manxie_ls, manxie_ls$trip_id) %>%
+  lapply(., function(x){mean(x$zsd, na.rm = T)}) %>%
+  unlist(.) %>%
+  sd(., na.rm = T)
+
