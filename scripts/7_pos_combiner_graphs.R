@@ -52,3 +52,41 @@ dive_timing_plot <-
 ggsave(dive_timing_plot, filename = "plots/dive_time_plot.png",
        width = 5, height = 3, dpi = 500)
 
+mod_df_restricted <- split(mod_df, mod_df$trip_id) %>%
+  lapply(., function(x){
+    limit <- x$date_time[nrow(x)] - 24*60*60
+    
+    x$last_day <- "Early"
+    
+    x$last_day[which(x$date_time > limit & x$returns == "Y")] <-
+      "Late"
+    
+    x
+  }) %>%
+  bind_rows()
+
+twilights <- mod_df[which(mod_df$sunangle > -0.2 &
+                            mod_df$sunangle < 0.2),]
+
+sunrise <- twilights %>%
+  filter(HOD < 12)
+
+sunset <- twilights %>%
+  filter(HOD > 12)
+
+dive_timing_plot_2 <- 
+  ggplot(mod_df_restricted) +
+  geom_histogram(aes(x = MOD, weight = dives, fill = last_day),
+                 alpha = 0.5, binwidth = 0.5) +
+  geom_vline(data = sunrise, aes(xintercept = mean(MOD)), colour = "black", size = 0.8) +
+  geom_vline(data = sunset, aes(xintercept = mean(MOD)), colour = "black", size = 0.8) +
+  geom_text(aes(x = 3, y = 220, label = "Sunrise")) +
+  geom_text(aes(x = 22, y = 220, label = "Sunset")) +
+  labs(x = "Hour", y = "Dives", fill = "") +
+  scale_x_continuous(limits = c(0, 24),
+                     breaks = c(0, 6, 12, 18, 24))
+
+dive_timing_plot_2
+
+ggsave(dive_timing_plot_2, filename = "plots/dive_time_plot_2.png",
+       width = 6, height = 3, dpi = 500)

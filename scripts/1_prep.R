@@ -367,6 +367,27 @@ tripSplit <- function(Track,
   return(Track)
 }
 
+# trip_cleaner ------------------------------------------------------------
+
+trip_cleaner <- function(x, t = 60)
+{
+  ind <- 1
+  
+  x$section <- paste(x$trip_id, ind, sep = "_")
+  
+  for(i in 2:(nrow(x)))
+  {
+    diff <- abs(as.numeric(difftime(time1 = x$date_time[i],
+                                    time2 = x$date_time[i - 1],
+                                    units = "mins")))
+    
+    if(diff > t){ind <- ind + 1}
+    
+    x$section[i] <- paste(x$trip_id[i], ind, sep = "_")
+  }
+  x
+}
+
 # BirdTrip ----------------------------------------------------------------
 
 Birdtrip <- function(df, x, y,

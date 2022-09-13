@@ -10,7 +10,7 @@ manx_dives$ID <- manx_dives$id
 # Split the pos data into a list to append positions ----------------------
 
 # Split dive dataframe into list by ID
-pos_ls <- split(manxie_ls_restricted, manxie_ls_restricted$ID)
+pos_ls <- split(manxie_ls, manxie_ls$ID)
 
 # Run this function to append locations and other variables to dives
 pos_ls <- lapply(pos_ls, FUN = pos_attach, dive_df = manx_dives)
@@ -39,7 +39,6 @@ mod_df <- pos_dive_df %>%
   
   mutate(ID = as.factor(ID),
          trip_id = as.factor(trip_id),
-         hmm_state = ifelse(hmm_state_zsd == 2, 1, 0),
          KD490 = log(KD490),
          chla = log(chla),
          dive_bool = ifelse(dives > 0, 1, 0),
